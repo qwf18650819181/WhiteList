@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+      http://mybatis.org/schema/mybatis-spring
+      http://mybatis.org/schema/mybatis-spring.xsd
+      http://www.springframework.org/schema/aop
+      http://www.springframework.org/schema/aop/spring-aop.xsd
+      http://www.springframework.org/schema/tx
+      http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+      http://www.springframework.org/schema/context
+      http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+	<!-- 各种实现的接口,我懒，没写在xml里，用了anntion，如果要改，请修改-->
+	<context:component-scan base-package="com.tedu">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+
+	<!--<context:annotation-config></context:annotation-config>-->
+
+	<!--<bean id="checkImpl" class="myTwo.preHandle.impl.CheckImpl"></bean>-->
+	<!--<bean id="coverImpl" class="myTwo.preHandle.impl.CoverImpl"></bean>-->
+	<!--<bean id="defaultValueCoverImpl" class="myTwo.preHandle.impl.DefaultValueCoverImpl"></bean>-->
+
+
+	<!-- 放入mvc配置文件才行-->
+	<!--<bean id="applicationContextFactory"	class="com.tedu.util.ApplicationContextFactory" lazy-init="false"></bean>-->
+
+	<!-- 数据源 -->
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+
+	<!--<bean id="dataSource1" class="com.alibaba.druid.pool.DruidDataSource">-->
+		<!--<property name="url" value="${datasource1.jdbc.url}"></property>-->
+		<!--<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>-->
+		<!--<property name="username" value="${datasource1.jdbc.username}"></property>-->
+		<!--<property name="password" value="${datasource1.jdbc.password}"></property>-->
+	<!--</bean>-->
+
+	<!--<bean id="dataSource2" class="com.alibaba.druid.pool.DruidDataSource">-->
+		<!--<property name="url" value="${datasource2.jdbc.url}"></property>-->
+		<!--<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>-->
+		<!--<property name="username" value="${datasource2.jdbc.username}"></property>-->
+		<!--<property name="password" value="${datasource2.jdbc.password}"></property>-->
+	<!--</bean>-->
+	<bean id="dataSource1" class="org.springframework.jdbc.datasource.SimpleDriverDataSource" >
+		<!-- ”连接“的基本属性  -->
+		<property name="url" value="${datasource2.jdbc.url}" />
+		<property name="driverClass" value="com.mysql.jdbc.Driver"/>
+		<property name="username" value="${datasource2.jdbc.username}" />
+		<property name="password" value="${datasource2.jdbc.password}" />
+		<!-- 连接池属性 -->
+
+	</bean>
+	<bean id="dataSource2" class="org.springframework.jdbc.datasource.SimpleDriverDataSource" >
+		<!-- ”连接“的基本属性  -->
+		<property name="url" value="${datasource2.jdbc.url}" />
+		<property name="driverClass" value="com.mysql.cj.jdbc.Driver"/>
+		<property name="username" value="${datasource2.jdbc.username}" />
+		<property name="password" value="${datasource2.jdbc.password}" />
+		<!-- 连接池属性 -->
+
+	</bean>
+
+
+	<!--<bean id="logFilter" class="com.alibaba.druid.filter.logging.Slf4jLogFilter">-->
+		<!--<property name="statementExecutableSqlLogEnable" value="false" />-->
+	<!--</bean>-->
+
+	<!-- 数据源：Spring用来控制业务逻辑。数据源、事务控制、aop -->
+	<bean id="dataSource" class="com.tedu.dao.common.DynamicDataSource">
+		<property name="targetDataSources">
+			<map key-type="java.lang.String">
+				<entry key="dataSource1" value-ref="dataSource1"></entry>
+				<entry key="dataSource2" value-ref="dataSource2"></entry>
+			</map>
+		</property>
+		<!-- 默认目标数据源为你主库数据源 -->
+		<property name="defaultTargetDataSource" ref="dataSource1"/>
+	</bean>
+
+	<!-- spring事务管理 -->
+	<bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<tx:annotation-driven transaction-manager="dataSourceTransactionManager" order="2"/>
+
+
+
+	<!-- 整合mybatis
+		    目的：1、spring管理所有组件。mapper的实现类。
+		            com.tedu.service==>Dao   @Autowired:自动注入mapper；
+		        2、spring用来管理事务，spring声明式事务
+		-->
+	<!--创建出SqlSessionFactory对象  -->
+	<!-- MP 提供的 MybatisSqlSessionFactoryBean -->
+
+	<bean id="sqlSessionFactoryBean"
+		  class="com.baomidou.mybatisplus.spring.MybatisSqlSessionFactoryBean">
+		<!-- 数据源 -->
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- mybatis 全局配置文件 -->
+<!--		<property name="configLocation" value="classpath*:mybatis-config.xml"></property>-->
+		<!-- 别名处理 -->
+		<property name="typeAliasesPackage" value="com.tedu.dao.bean"></property>
+		<!-- 注入全局MP策略配置 -->
+		<property name="globalConfig" ref="globalConfiguration"></property>
+
+		<property name="mapperLocations" value="classpath*:mapper/*Mapper.xml"></property>
+
+		<!--<property name="mapperLocations" value="mapper"></property>-->
+		<!-- 插件注册 -->
+		<!--<property name="plugins">-->
+			<!--<list>-->
+				<!--&lt;!&ndash; 注册分页插件 &ndash;&gt;-->
+				<!--<bean class="com.baomidou.mybatisplus.plugins.PaginationInterceptor" />-->
+				<!--&lt;!&ndash; 注入 SQL 性能分析插件，建议在开发环境中使用，可以在控制台查看 SQL 执行日志 &ndash;&gt;-->
+				<!--<bean class="com.baomidou.mybatisplus.plugins.PerformanceInterceptor">-->
+					<!--<property name="maxTime" value="1000" />-->
+					<!--&lt;!&ndash;SQL 是否格式化 默认false&ndash;&gt;-->
+					<!--<property name="format" value="true" />-->
+				<!--</bean>-->
+			<!--</list>-->
+		<!--</property>-->
+	</bean>
+
+	<!-- 定义 MybatisPlus 的全局策略配置-->
+	<bean id ="globalConfiguration" class="com.baomidou.mybatisplus.entity.GlobalConfiguration">
+		<!-- 在 2.3 版本以后，dbColumnUnderline 默认值是 true -->
+		<property name="dbColumnUnderline" value="true"></property>
+		<!-- 全局的主键策略 -->
+		<property name="idType" value="0"></property>
+		<!-- 全局的表前缀策略配置 -->
+		<property name="tablePrefix" value="tbl_"></property>
+
+	</bean>
+
+	<!-- 配置mybatis 扫描mapper接口的路径 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.tedu.dao"></property>
+	</bean>
+
+
+	<!--配置一个可以进行批量执行的sqlSession  -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+	    <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactoryBean"></constructor-arg>
+	    <constructor-arg name="executorType" value="BATCH"></constructor-arg>
+	</bean>
+
+	<!-- 扫描所有的mapper接口的实现，让这些mapper能够自动注入；
+		 base-package：指定mapper接口的包名
+		  -->
+	<!--<mybatis-spring:scan base-package="com.tedu.dao"/>-->
+
+	<!-- 配置切面的Bean -->
+	<bean id="dataSourceExchange" class="com.tedu.dao.common.DataSourceExchange"/>
+
+	<!-- 配置AOP -->
+	<aop:config>
+	    <!-- 配置切点表达式  -->
+	    <aop:pointcut id="servicePointcut" expression="execution(* com.tedu.service.*.*(..))"/>
+	    <!-- 关键配置，切换数据源一定要比持久层代码更先执行（事务也算持久层代码） <aop:advisor advice-ref="txAdvice" pointcut-ref="com.tedu.service" order="2"/> -->
+	    <aop:advisor advice-ref="dataSourceExchange" pointcut-ref="servicePointcut" order="1"/>
+	</aop:config>
+
+</beans>

@@ -1,0 +1,113 @@
+<xml>
+	<Type>p4</Type>
+	<!-- 如果使用P4 接口，就不需要IP 和 PORT 了 -->
+	<Ip>127.0.0.1</Ip>
+	<Port>1111</Port>
+	<To>BL0001</To>
+	<Send> 
+		<!-- 从P4 到文思 -->
+		<!-- 发送前处理-->
+		<PreHandle>a1001preHandle</PreHandle>
+		<!-- 发送后处理 -->
+		<PostHandle>a1001postHandle</PostHandle>
+		<Fields>
+			<!-- 文思的接口 REQTYPE 默认送0，没有P4对应 -->
+			<Field>
+				<from></from><!--字段名称 必须遵循驼峰写法，否则不识别 from可以为空，to不可为空 -->
+				<to>reqType</to>
+				<check>notNullCheck</check>
+				<cover></cover>
+				<!-- 根据 前缀 调用具体的转换接口IChange -->
+				<defaultValue>0</defaultValue>
+			</Field>
+			<Field>
+				<from>bsn_ID</from>
+				<to>businessNo</to>
+				<check>notNullCheck</check>
+				<cover></cover>
+				<defaultValue></defaultValue>
+			</Field>
+			<Field>
+				<from>txn_Dt</from>
+				<to>reqTime</to>
+				<check>notNullCheck</check>
+				<cover>dateformatCover</cover>
+				<defaultValue></defaultValue>
+			</Field>
+			<Field>
+				<from>txn_Chnl_Cd</from>
+				<to>source</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue>111</defaultValue>
+			</Field>
+			<Field>
+				<from></from>
+				<to>date</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue>T{20200505}</defaultValue>
+			</Field> 
+			<Field>
+				<from></from>
+				<to>sum</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue>I{100}</defaultValue>
+			</Field>
+			<Field>
+				<from></from>
+				<to>test.dd</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue>M</defaultValue>
+			</Field>
+			<Field>
+				<from></from>
+				<to>test.xx</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue>I{1}</defaultValue>
+			</Field> 
+			<Field>
+				<from>flag</from>
+				<to>test.cha</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue></defaultValue>
+			</Field> 
+			<Field>
+				<from>d001.chb</from>
+				<to>test.chb</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue></defaultValue>
+			</Field> 
+			<Field>
+				<from>list</from>
+				<to>list</to>
+				<check></check>
+				<cover>listCovert</cover>
+				<defaultValue></defaultValue>
+			</Field> 
+			<Field>
+				<from>entities.c</from>
+				<to>liTests.a</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue></defaultValue>
+			</Field> 
+			<Field>
+				<from>entities.d</from>
+				<to>liTests.b</to>
+				<check></check>
+				<cover></cover>
+				<defaultValue></defaultValue>
+			</Field> 
+		</Fields>
+	</Send>
+	<Receive>
+		<!-- 接收P4 接口的数据-->
+	</Receive>
+	
+</xml>
